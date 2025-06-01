@@ -1,0 +1,18 @@
+body {
+    background: #f8fafc;
+}
+.header-bar {
+    background: #212529;
+    color: #fff;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.form-container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    padding: 2rem 2.5rem;
+    max-width: 700px;
+    margin: auto;
+}
