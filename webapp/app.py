@@ -4,6 +4,7 @@ import webbrowser
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
+import numpy as np
 
 app = Flask(__name__)
 model = joblib.load("mlp_kickstarter.pkl")
@@ -13,32 +14,55 @@ feature_cols = [
     'duration_days', 'launch_month', 'launch_year', 'deadline_month', 'deadline_year'
 ]
 
-def suggest_improvements(input_data, probability=None):
+def dynamic_suggestions(input_data, model, feature_cols):
     suggestions = []
-    try:
-        goal = float(input_data.get('goal', 0))
-        usd_goal = float(input_data.get('usd_goal_real', 0))
-        duration = int(input_data.get('duration_days', 0))
-        category = input_data.get('category', '').lower()
-    except Exception:
-        return ["Unable to analyze input for suggestions."]
-    
-    # Suggerimento dinamico in base alla probabilità
-    if probability is not None:
-        if probability > 0.45:
-            suggestions.append("Your project is close to being successful. Small changes might help!")
-        elif probability < 0.2:
-            suggestions.append("Your project has a low chance of success. Consider revising multiple aspects.")
+    df = pd.DataFrame({col: [input_data.get(col, "")] for col in feature_cols})
 
-    # Suggerimenti dinamici in base ai valori inseriti
-    if usd_goal > 20000:
-        suggestions.append("Try lowering your funding goal (USD Goal) below $20,000.")
-    if duration < 20:
-        suggestions.append("Consider increasing the campaign duration to at least 20 days.")
-    if category in ["poetry", "journalism"]:
-        suggestions.append("Projects in this category have a lower success rate. Consider a different category if possible.")
+    # Calcola la probabilità attuale
+    base_proba = model.predict_proba(df)[0][list(model.classes_).index("successful")]
+
+    # 1. Prova a ridurre il goal del 20%
+    try:
+        goal = float(df["goal"].iloc[0])
+        usd_goal = float(df["usd_goal_real"].iloc[0])
+        df_goal = df.copy()
+        df_goal["goal"] = [str(int(goal * 0.8))]
+        df_goal["usd_goal_real"] = [str(round(usd_goal * 0.8, 2))]
+        proba_goal = model.predict_proba(df_goal)[0][list(model.classes_).index("successful")]
+        if proba_goal > base_proba + 0.05:
+            suggestions.append(f"Lower your goal by 20% (to {int(goal*0.8)}) to increase the probability of success to {(proba_goal*100):.1f}%.")
+    except Exception:
+        pass
+
+    # 2. Prova ad aumentare la durata di 10 giorni
+    try:
+        duration = int(df["duration_days"].iloc[0])
+        df_dur = df.copy()
+        df_dur["duration_days"] = [str(duration + 10)]
+        proba_dur = model.predict_proba(df_dur)[0][list(model.classes_).index("successful")]
+        if proba_dur > base_proba + 0.05:
+            suggestions.append(f"Increase your campaign duration by 10 days (to {duration+10}) to increase the probability of success to {(proba_dur*100):.1f}%.")
+    except Exception:
+        pass
+
+    # 3. Prova a cambiare categoria (solo se non è Technology)
+    try:
+        current_cat = df["category"].iloc[0]
+        alternative_cats = ["Technology", "Art", "Games", "Design", "Music"]
+        for alt_cat in alternative_cats:
+            if alt_cat != current_cat:
+                df_cat = df.copy()
+                df_cat["category"] = [alt_cat]
+                proba_cat = model.predict_proba(df_cat)[0][list(model.classes_).index("successful")]
+                if proba_cat > base_proba + 0.05:
+                    suggestions.append(f"Try changing the category to '{alt_cat}' to increase the probability of success to {(proba_cat*100):.1f}%.")
+                    break
+    except Exception:
+        pass
+
     if not suggestions:
-        suggestions.append("No specific suggestions. Try improving your project description or marketing.")
+        suggestions.append("No effective automatic suggestions found. Try improving your project description or marketing.")
+
     return suggestions
 
 @app.route("/", methods=["GET", "POST"])
@@ -55,7 +79,7 @@ def index():
             proba = model.predict_proba(df)
             probability = proba[0][list(model.classes_).index("successful")]
         if prediction == "FAILED":
-            suggestions = suggest_improvements(request.form, probability)
+            suggestions = dynamic_suggestions(request.form, model, feature_cols)
     return render_template("index.html", prediction=prediction, suggestions=suggestions, probability=probability)
 
 def open_browser():
