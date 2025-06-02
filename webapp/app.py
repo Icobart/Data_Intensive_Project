@@ -70,8 +70,10 @@ def index():
     prediction = None
     suggestions = []
     probability = None
+    form_data = {}
     if request.method == "POST":
-        data = {col: [request.form.get(col, "")] for col in feature_cols}
+        form_data = {col: request.form.get(col, "") for col in feature_cols}
+        data = {col: [form_data.get(col, "")] for col in feature_cols}
         df = pd.DataFrame(data)
         pred = model.predict(df)[0]
         prediction = "SUCCESSFUL" if pred == "successful" else "FAILED"
@@ -80,7 +82,7 @@ def index():
             probability = proba[0][list(model.classes_).index("successful")]
         if prediction == "FAILED":
             suggestions = dynamic_suggestions(request.form, model, feature_cols)
-    return render_template("index.html", prediction=prediction, suggestions=suggestions, probability=probability)
+    return render_template("index.html", prediction=prediction, suggestions=suggestions, probability=probability, form_data=form_data)
 
 def open_browser():
     webbrowser.open_new("http://127.0.0.1:5000/")

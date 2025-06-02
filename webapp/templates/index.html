@@ -46,6 +46,12 @@
             alert('Please fill in all fields.');
         }
     }
+
+    function clearForm() {
+        document.getElementById('predictForm').reset();
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        document.getElementById('usd_goal_real').value = '';
+    }
     </script>
 </head>
 <body>
@@ -57,62 +63,63 @@
         <form method="post" class="row g-3" id="predictForm">
             <div class="col-md-6">
                 <label class="form-label">Project Name</label>
-                <input type="text" name="name" class="form-control" required>
+                <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Category</label>
-                <input type="text" name="category" class="form-control" required>
+                <input type="text" name="category" class="form-control" required value="{{ form_data.get('category', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Main Category</label>
-                <input type="text" name="main_category" class="form-control" required>
+                <input type="text" name="main_category" class="form-control" required value="{{ form_data.get('main_category', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Currency</label>
                 <select name="currency" id="currency" class="form-control" required onchange="updateUsdGoal()">
                     <option value="">Select currency</option>
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="AUD">AUD - Australian Dollar</option>
-                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="USD" {% if form_data.get('currency') == 'USD' %}selected{% endif %}>USD - US Dollar</option>
+                    <option value="EUR" {% if form_data.get('currency') == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+                    <option value="GBP" {% if form_data.get('currency') == 'GBP' %}selected{% endif %}>GBP - British Pound</option>
+                    <option value="CAD" {% if form_data.get('currency') == 'CAD' %}selected{% endif %}>CAD - Canadian Dollar</option>
+                    <option value="AUD" {% if form_data.get('currency') == 'AUD' %}selected{% endif %}>AUD - Australian Dollar</option>
+                    <option value="JPY" {% if form_data.get('currency') == 'JPY' %}selected{% endif %}>JPY - Japanese Yen</option>
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Country</label>
-                <input type="text" name="country" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Goal (in selected currency)</label>
-                <input type="number" name="goal" id="goal" class="form-control" min="1" required oninput="updateUsdGoal()">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">USD Goal (auto-calculated)</label>
-                <input type="number" name="usd_goal_real" id="usd_goal_real" class="form-control" min="1" required readonly>
+                <label class="form-label">Country <span class="text-secondary" style="font-size:0.95em;">(ISO code, e.g. US, IT, GB)</span></label>
+                <input type="text" name="country" class="form-control" required value="{{ form_data.get('country', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Campaign Duration (days)</label>
-                <input type="number" name="duration_days" class="form-control" min="1" required>
+                <input type="number" name="duration_days" class="form-control" min="1" required value="{{ form_data.get('duration_days', '') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Goal (in selected currency)</label>
+                <input type="number" name="goal" id="goal" class="form-control" min="1" required oninput="updateUsdGoal()" value="{{ form_data.get('goal', '') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">USD Goal (auto-calculated)</label>
+                <input type="number" name="usd_goal_real" id="usd_goal_real" class="form-control" min="1" required readonly value="{{ form_data.get('usd_goal_real', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Launch Month</label>
-                <input type="number" name="launch_month" class="form-control" min="1" max="12" required>
+                <input type="number" name="launch_month" class="form-control" min="1" max="12" required value="{{ form_data.get('launch_month', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Launch Year</label>
-                <input type="number" name="launch_year" class="form-control" min="2000" max="2100" required>
+                <input type="number" name="launch_year" class="form-control" min="2000" max="2100" required value="{{ form_data.get('launch_year', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Deadline Month</label>
-                <input type="number" name="deadline_month" class="form-control" min="1" max="12" required>
+                <input type="number" name="deadline_month" class="form-control" min="1" max="12" required value="{{ form_data.get('deadline_month', '') }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Deadline Year</label>
-                <input type="number" name="deadline_year" class="form-control" min="2000" max="2100" required>
+                <input type="number" name="deadline_year" class="form-control" min="2000" max="2100" required value="{{ form_data.get('deadline_year', '') }}">
             </div>
-            <div class="col-12 text-center">
+            <div class="col-12 d-flex justify-content-between">
                 <button type="submit" class="btn btn-primary px-5">Predict</button>
+                <button type="button" class="btn btn-secondary px-5" onclick="window.location.href='/'">Clear</button>
             </div>
         </form>
         {% if prediction %}
