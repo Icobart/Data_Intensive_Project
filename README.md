@@ -1,4 +1,4 @@
-# Progetto d'Esame - Programmazione di Applicazioni Data Intensive
+# Progetto d'Esame Enrico Cornacchia - Programmazione di Applicazioni Data Intensive
 
 Questo repository contiene il progetto d'esame svolto per il corso di **Programmazione di Applicazioni Data Intensive** (DISI - Università di Bologna, Cesena).
 
